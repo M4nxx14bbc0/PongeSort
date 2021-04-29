@@ -7,7 +7,6 @@ package server;
 
 import java.io.*;
 import java.net.*;
-import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -27,12 +26,23 @@ public class ServerMain {
             Socket client = socket.accept();
             System.out.println(client.getInetAddress());
             while (true) {
-                ObjectInputStream sc = new ObjectInputStream(client.getInputStream());
-                char[] s = (char[])(sc.readObject());
-                for (char c : s) {
-                    System.out.println(c);
+                ObjectInputStream reader = new ObjectInputStream(client.getInputStream());
+                ObjectOutputStream writer = new ObjectOutputStream(client.getOutputStream());
+                
+                char[] s = (char[])(reader.readObject());
+                Character[] array = new Character[10];
+                for (int i = 0; i < array.length; i++) {
+                    array[i] = s[(int)(Math.random()*9+1)];
+                }
+                writer.writeObject(array);
+                writer.flush();
+                writer.close();
+                reader.close();
+                if (client.isClosed()) {
+                    break;
                 }
             }
+            socket.close();
         } catch (ClassNotFoundException | IOException ex) {
             Logger.getLogger(ServerMain.class.getName()).log(Level.OFF, null, ex);
         }

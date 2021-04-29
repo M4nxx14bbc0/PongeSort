@@ -7,6 +7,7 @@
 package client;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.logging.Level;
@@ -22,10 +23,9 @@ public class ClientMain {
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ClassNotFoundException {
         try {
             server = new Socket("127.0.0.1", 5500);
-            ObjectOutputStream writer = new ObjectOutputStream(server.getOutputStream());
             Character[] array = new Character[10];
             for (int i = 0; i < array.length; i++) {
                 char c = chars[(int)(Math.random()*25+1)];
@@ -34,7 +34,18 @@ public class ClientMain {
                 }
                 array[i] = c;
             }
-            writer.writeObject(array);
+            
+            char[] s;
+            do {
+                ObjectOutputStream writer = new ObjectOutputStream(server.getOutputStream());
+                ObjectInputStream reader = new ObjectInputStream(server.getInputStream());
+                
+                writer.writeObject(array);
+                writer.close();
+                s = (char[]) reader.readObject();
+                reader.close();
+            } while (!s.equals(array));
+            server.close();
         } catch (IOException io) {
             Logger.getLogger(ClientMain.class.getName()).log(Level.OFF, null, io);
         }
